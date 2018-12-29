@@ -3,23 +3,24 @@ package onyx.telemetry;
 import java.awt.*;
 
 /**
- * A telemetry readout with a title followed by several indented lines. Fully mutable.
+ * A text telemetry module with a title followed by several indented lines.
  */
 public class ParagraphTelemetry extends TextTelemetry {
     public static final String TAB = "    ";
 
-    private final FontMetrics fontMetrics;
-    private volatile String[] data;
-    private int width = -1, height = -1;
+    protected final FontMetrics fontMetrics;
+    protected volatile String[] data;
+    protected int width = -1, height = -1;
 
     /**
      * Creates a new ParagraphTelemetry with data. Immutable once constructed.
      *
-     * @param x     horizontal position from interface left
-     * @param y     vertical position from interface top
-     * @param coded whether or not the data contains Onyx metacharacters
-     * @param title title text
-     * @param data  text appearing in lines indented under the title
+     * @param x           horizontal position from interface left
+     * @param y           vertical position from interface top
+     * @param coded       whether or not the data contains Onyx metacharacters
+     * @param fontMetrics font metrics for text dimension calculations
+     * @param title       title text
+     * @param data        text appearing in lines indented under the title
      */
     public ParagraphTelemetry(int x, int y, boolean coded, FontMetrics fontMetrics, String title, String... data) {
         super(x, y, coded);
@@ -81,7 +82,11 @@ public class ParagraphTelemetry extends TextTelemetry {
      * @param newTitle new title text
      */
     public void setTitle(String newTitle) {
-        data[0] = newTitle;
+        data[0] = TAB + newTitle;
+        int newTitleWidth = fontMetrics.stringWidth(data[0]);
+
+        if (newTitleWidth > width)
+            width = newTitleWidth;
     }
 
     /**
@@ -92,5 +97,9 @@ public class ParagraphTelemetry extends TextTelemetry {
      */
     public void setLine(int index, String newLine) {
         data[index + 1] = TAB + newLine;
+        int newLineWidth = fontMetrics.stringWidth(data[index + 1]);
+
+        if (newLineWidth > width)
+            width = newLineWidth;
     }
 }

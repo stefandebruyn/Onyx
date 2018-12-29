@@ -1,28 +1,44 @@
 package onyx.ui;
 
+import onyx.telemetry.ImageTelemetry;
 import onyx.telemetry.Telemetry;
 import onyx.telemetry.TextTelemetry;
+import onyx.util.ColorLibrary;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 /**
- * Low-level graphical drawing panel used for telemetry interfaces.
+ * A graphics drawing panel used for telemetry interfaces. Displays use a common font family and size, but support
+ * dynamic color and weight changes mid-line.
+ * <p>
+ * An overarching {@link Theme} acts as a color palette. Text color and weight can still be forcibly changed mid-line
+ * with the '!' and '#' characters, respectively, where the following character is a formatting metacharacter indicating
+ * the change to be made. See {@link #COLOR_CODES} and {@link #WEIGHT_CODES} for valid metacharacters.
+ * <p>
+ * The display's refresh rate defaults to 60 Hz. This can be updated via {@link #setRefreshRate(int)}.
  */
 public class Display extends JPanel {
+    /**
+     * Characters that, when preceded by '!' in coded text, trigger a color change.
+     */
     public static final HashMap<String, Color> COLOR_CODES = new HashMap<>() {{
         put("r", Color.RED);
         put("g", Color.GREEN);
         put("b", Color.BLUE);
         put("w", Color.WHITE);
         put("o", Color.ORANGE);
+        put("t", ColorLibrary.PALE_RED);
+        put("l", ColorLibrary.LIGHT_GRAY);
+        put("s", ColorLibrary.LIGHT_BLUE);
+        put("c", ColorLibrary.CYAN);
+        put("y", ColorLibrary.LIGHT_YELLOW);
     }};
+    /**
+     * Characters that, when preceded by '#' in coded text, trigger a weight change.
+     */
     public static final HashMap<String, Integer> WEIGHT_CODES = new HashMap<>() {{
         put("p", Font.PLAIN);
         put("b", Font.BOLD);
@@ -41,7 +57,7 @@ public class Display extends JPanel {
     private Color bgColor, textColor;
 
     private String fontName;
-    private int fontSize, lineHeight;
+    private int fontSize, lineHeight, fps = 60;
 
     /**
      * Initializes an empty display.
@@ -63,14 +79,40 @@ public class Display extends JPanel {
         fontMetrics = getFontMetrics(font);
         lineHeight = fontMetrics.getHeight();
 
-        bgColor = theme.get("bg");
-        textColor = theme.get("text");
+        bgColor = theme.getColor("bg");
+        textColor = theme.getColor("text");
     }
 
     /**
-     * Renders telemetry currently in the queue.
+     * Sets the refresh rate of the display.
+     *
+     * @param fps frequency (Hz)
      */
-    public void renderTelemetry() {
+    public void setRefreshRate(int fps) {
+        this.fps = fps;
+    }
+
+    /**
+     * Renders a single frame to the display. After the rendering is complete, the thread will sleep for 1000 /{@link #fps}
+     * milliseconds to smooth the interaction between the display and update threads (the thread placing calls to
+     * update). Ideally, calls to this method are placed in a loop running at or above the refresh rate for the duration
+     * of the program.
+     *
+     * @see {@link #setRefreshRate(int)}
+     */
+    public void update() {
+        repaint();
+
+        try {
+            Thread.sleep(1000 / fps);
+        } catch (InterruptedException e) {
+        }
+    }
+
+    /**
+     * Renders all telemetry to the target graphics surface.
+     */
+    private void renderTelemetry() {
         // Create a clean drawing surface
         telemetryImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
         targetSurface = telemetryImage.createGraphics();
@@ -80,7 +122,7 @@ public class Display extends JPanel {
         for (Telemetry t : telemetryMap.values()) {
             // TextTelemetry instances
             if (t instanceof TextTelemetry) {
-                TextTelemetry tel = (TextTelemetry)t;
+                TextTelemetry tel = (TextTelemetry) t;
                 String[] data = tel.data();
                 boolean coded = tel.coded();
 
@@ -95,6 +137,9 @@ public class Display extends JPanel {
                     else
                         targetSurface.drawString(data[i], x, y);
                 }
+            } else if (t instanceof ImageTelemetry) {
+                ImageTelemetry tel = (ImageTelemetry) t;
+                targetSurface.drawImage(tel.render(), tel.x(), tel.y(), null);
             }
         }
 
@@ -105,7 +150,7 @@ public class Display extends JPanel {
      * Adds a new piece of telemetry to the display.
      *
      * @param identifier identifying name
-     * @param tel telemetry instance
+     * @param tel        telemetry instance
      */
     public void addTelemetry(String identifier, Telemetry tel) {
         telemetryMap.put(identifier, tel);
@@ -122,7 +167,7 @@ public class Display extends JPanel {
     }
 
     /**
-     * Drawing loop.
+     * Renders a single frame of telemetry and draws it to a graphics surface.
      *
      * @param g drawing surface
      */
@@ -142,6 +187,9 @@ public class Display extends JPanel {
      * @param str text to draw
      */
     private void drawTextCoded(int x, int y, String str) {
+        if (str == null)
+            return;
+
         targetSurface.setColor(textColor);
         targetSurface.setFont(new Font(fontName, Font.PLAIN, fontSize));
 
@@ -158,7 +206,7 @@ public class Display extends JPanel {
                 index += 2;
                 continue;
 
-            // Font weight code was found
+                // Weight code was found
             } else if (c == BEGIN_WEIGHT_CODE) {
                 targetSurface.setFont(new Font(fontName, WEIGHT_CODES.get("" + str.charAt(index + 1)), fontSize));
                 index += 2;
@@ -172,7 +220,55 @@ public class Display extends JPanel {
         }
     }
 
+    /**
+     * Gets the {@link FontMetrics} used for text dimension calculations.
+     *
+     * @return font metrics
+     */
     public FontMetrics fontMetrics() {
         return fontMetrics;
+    }
+
+    /**
+     * Gets the font used for drawing.
+     *
+     * @return display font
+     */
+    public Font font() {
+        return font;
+    }
+
+    /**
+     * Gets the height in pixels of a single line of text.
+     *
+     * @return line height in pixels
+     */
+    public int lineHeight() {
+        return lineHeight;
+    }
+
+    /**
+     * Updates the Theme used for coloring.
+     *
+     * @param theme
+     */
+    public void setTheme(Theme theme) {
+        this.theme = theme;
+    }
+
+    /**
+     * Launches this display as the content frame of a {@link JPanel}.
+     *
+     * @param frameName window name
+     * @return frame
+     */
+    public JFrame launch(String frameName) {
+        JFrame frame = new JFrame(frameName);
+        frame.setContentPane(this);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        return frame;
     }
 }

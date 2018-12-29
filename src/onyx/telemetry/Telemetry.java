@@ -10,8 +10,8 @@ public abstract class Telemetry {
     /**
      * Creates a new piece of telemetry at some position.
      *
-     * @param x horizontal position from interface left
-     * @param y vertical position from interface top
+     * @param x     horizontal position from interface left
+     * @param y     vertical position from interface top
      * @param coded whether or not data contains Onyx metacharacters
      */
     public Telemetry(int x, int y, boolean coded) {
