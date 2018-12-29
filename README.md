@@ -29,7 +29,8 @@ Display disp = new Display(640, 480, 10, "default", Theme.DARK);
 ```java
 FontMetrics fm = disp.fontMetrics();
 // x position, y position, support formatting, font metrics,
-ParagraphTelemetry par = new ParagraphTelemetry(10, 10, true, fm, "!rMessage from Onyx", "#ihello, world");
+ParagraphTelemetry par =
+    new ParagraphTelemetry(10, 10, true, fm, "!rMessage from Onyx", "#ihello, world");
 
 disp.addTelemetry("message", par); // Identifying name, module
 ```
