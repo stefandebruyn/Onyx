@@ -22,7 +22,8 @@ import javax.swing.*;
  */
 public class Display extends JPanel {
     /**
-     * Characters that, when preceded by '!' in coded text, trigger a color change.
+     * Characters that, when preceded by '!' in coded text, trigger a color change. Note that color codes with more than
+     * one character must be enclosed in curly braces (e.g. "!{mv}").
      */
     public static final HashMap<String, Color> COLOR_CODES = new HashMap<>() {{
         put("r", Color.RED);
@@ -30,11 +31,17 @@ public class Display extends JPanel {
         put("b", Color.BLUE);
         put("w", Color.WHITE);
         put("o", Color.ORANGE);
-        put("t", ColorLibrary.PALE_RED);
-        put("l", ColorLibrary.LIGHT_GRAY);
-        put("s", ColorLibrary.LIGHT_BLUE);
+        put("pr", ColorLibrary.PALE_RED);
+        put("lg", ColorLibrary.LIGHT_GRAY);
+        put("lb", ColorLibrary.LIGHT_BLUE);
         put("c", ColorLibrary.CYAN);
-        put("y", ColorLibrary.LIGHT_YELLOW);
+        put("ly", ColorLibrary.LIGHT_YELLOW);
+        put("a", ColorLibrary.AQUAMARINE);
+        put("pe", ColorLibrary.PEACH);
+        put("mr", ColorLibrary.MAROON);
+        put("gg", ColorLibrary.GREEN_GRASS);
+        put("db", ColorLibrary.DEEP_BLUE);
+        put("mv", ColorLibrary.MAUVE);
     }};
     /**
      * Characters that, when preceded by '#' in coded text, trigger a weight change.
@@ -133,7 +140,7 @@ public class Display extends JPanel {
 
                     // Only process metacharacters if necessary
                     if (coded)
-                        drawTextCoded(x, y, data[i]);
+                        drawTextFormatted(x, y, data[i]);
                     else
                         targetSurface.drawString(data[i], x, y);
                 }
@@ -180,13 +187,13 @@ public class Display extends JPanel {
     }
 
     /**
-     * Text drawing with support for color and weight coding.
+     * Text drawing with support for format metacharacters.
      *
      * @param x   horizontal position from surface left
      * @param y   vertical position from surface top
      * @param str text to draw
      */
-    private void drawTextCoded(int x, int y, String str) {
+    private void drawTextFormatted(int x, int y, String str) {
         if (str == null)
             return;
 
@@ -201,16 +208,46 @@ public class Display extends JPanel {
             char c = str.charAt(index);
 
             // Color code was found
-            if (c == BEGIN_COLOR_CODE) {
-                targetSurface.setColor(COLOR_CODES.get("" + str.charAt(index + 1)));
-                index += 2;
-                continue;
+            if (c == BEGIN_COLOR_CODE && index != str.length() - 1) {
+                char nextChar = str.charAt(index + 1);
+                Color col = COLOR_CODES.get("" + nextChar);
 
-                // Weight code was found
+                // Single-character code
+                if (col != null) {
+                    targetSurface.setColor(col);
+                    index += 2;
+                    continue;
+
+                // Multi-character code enclosed in brackets
+                } else if (nextChar == '{') {
+                    // Find index of closing bracket
+                    int closeIndex = -1;
+                    for (int i = index + 2; i < str.length() && closeIndex == -1; i++)
+                        if (str.charAt(i) == '}')
+                            closeIndex = i;
+
+                    // Look up next color
+                    if (closeIndex != -1) {
+                        String code = str.substring(index + 2, closeIndex);
+                        col = COLOR_CODES.get(code);
+
+                        if (col != null) {
+                            targetSurface.setColor(col);
+                            index += 3 + code.length();
+                            continue;
+                        }
+                    }
+                }
+
+            // Weight code was found
             } else if (c == BEGIN_WEIGHT_CODE) {
-                targetSurface.setFont(new Font(fontName, WEIGHT_CODES.get("" + str.charAt(index + 1)), fontSize));
-                index += 2;
-                continue;
+                Integer weight = WEIGHT_CODES.get("" + str.charAt(index + 1));
+
+                if (weight != null) {
+                    targetSurface.setFont(new Font(fontName, weight, fontSize));
+                    index += 2;
+                    continue;
+                }
             }
 
             targetSurface.drawString("" + c, x + horizOffset, y + lineHeight);

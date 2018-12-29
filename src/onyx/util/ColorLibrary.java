@@ -6,7 +6,6 @@ import java.awt.*;
  * Extra colors for use in {@link onyx.ui.Theme}s.
  */
 public class ColorLibrary {
-
     public static final Color LIGHT_BLUE = new Color(0x89c6ff),
             AQUAMARINE = new Color(0x7FFFD4),
             CYAN = new Color(0x89f5ff),
@@ -18,7 +17,6 @@ public class ColorLibrary {
             DEEP_BLUE = new Color(0x0a1563),
             MAUVE = new Color(0x520a63),
             LIGHT_GRAY = new Color(0xbfbfbf);
-
 
     // Do not construct
     private ColorLibrary() {
