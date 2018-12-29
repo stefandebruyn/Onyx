@@ -1,6 +1,6 @@
 # Onyx
 
-Onyx is a small Java library for creating live telemetry dashboards. Whether tracking rocket avionics or server activity, Onyx's minimalist design allows for high information density at a fraction of the complexity of larger libraries.
+Onyx is a small Java library for creating fast, high information density telemetry dashboards. Though built with control engineering in mind, the API is easily extended for custom applications.
 
 ![](images/example-rocket.png)
 
