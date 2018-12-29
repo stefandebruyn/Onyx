@@ -42,7 +42,7 @@ To update a telemetry module, the instance can be retrieved from the `Display` b
 
 ```java
 ParagraphTelemetry par1 = disp.getTelemetry("message");
-par1.setLine(0, "bonjour, monde"); // Line index, new text
+par1.setLine(0, "#ibonjour, monde"); // Line index, new text
 ```
 
 Dashboard creation is triggered with `launch` and refreshes are prompted with `update`.
@@ -70,7 +70,7 @@ A title followed by indented lines of text.
 
 ```java
 ParagraphTelemetry systemClock = new ParagraphTelemetry(0, 0, true, disp.fontMetrics(),
-    "#bSystem time", // Header text
+    "#bSystem time", // Title text
     "" + (int) (System.currentTimeMillis() / 60000) + " minutes" // A line of telemetry
     "" + (int) ((System.currentTimeMillis() / 1000) % 60) + " seconds"); // Another line
 ```
