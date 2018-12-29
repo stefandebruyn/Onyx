@@ -17,6 +17,8 @@ Onyx is a small Java library for creating live telemetry dashboards. Whether tra
 
 ## Quickstart
 
+### Dashboard Setup
+
 Every dashboard begins with a `Display` object.
 
 ```java
@@ -24,7 +26,7 @@ Every dashboard begins with a `Display` object.
 Display disp = new Display(640, 480, 10, "default", Theme.DARK);
 ```
 
-`Telemetry` objects are configured and added to the `Display`'s collection of active telemetry modules.
+`Telemetry` modules are configured and added to the `Display`'s collection of active telemetry modules.
 
 ```java
 FontMetrics fm = disp.fontMetrics();
@@ -36,7 +38,7 @@ ParagraphTelemetry par = new ParagraphTelemetry(10, 10, true, fm,
 disp.addTelemetry("message", par); // Identifying name, module
 ```
 
-Here, the "!r" and "#i" are metacharacters indicating red and italic text, respectively. A complete list of valid metacharacters can be found in the `Display` class.
+Here, the "!r" and "#i" are metacharacters indicating red and italic text, respectively.
 
 To update a telemetry module, the instance can be retrieved from the `Display` by name.
 
@@ -60,11 +62,11 @@ To smooth the interaction between the update and rendering threads, every call t
 disp.setRefreshRate(30); // Refresh rate in Hz (defaults to 60)
 ```
 
-## Telemetry Modules
+### Telemetry Modules
 
 Various flavors of `Telemetry` represent data in different ways.
 
-### `ParagraphTelemetry`
+#### `ParagraphTelemetry`
 
 A title followed by indented lines of text.
 
@@ -75,7 +77,7 @@ ParagraphTelemetry systemClock = new ParagraphTelemetry(0, 0, true, disp.fontMet
     "" + (int) ((System.currentTimeMillis() / 1000) % 60) + " seconds"); // Another line
 ```
 
-### `ValueMapTelemetry`
+#### `ValueMapTelemetry`
 
 A format similar to `ParagraphTelemetry`, but lines below the header are unindented label-value pairs. Numeric values can be further formatted by specifying a `DecimalFormat`.
 
@@ -90,14 +92,14 @@ cannonData.put("!bParticles in chamber!w", 3);
 
 Here, the decimal format for the flywheel speed label is specified before assigning it a value because format updates are acknowledged in `put`.
 
-### `ConsoleTelemetry`
+#### `ConsoleTelemetry`
 
 A chronological readout of timestamped text entries, not unlike a server log.
 
 ```java
 ConsoleTelemetry console = new ConsoleTelemetry(0, 0, true, disp.fontMetrics(),
     "#b!yActions", 10); // Console title, maximum number of lines
-console.log("!cUser!w enabled !tautopilot", 112); // Line, point in time
+console.log("!cUser!w enabled !{lr}autopilot", 112); // Line, point in time
 ```
 
 `log` does not stamp entries by default. For that, a `Timestamper` must be specified:
@@ -108,7 +110,7 @@ console.setTimestamper(
     new MissionTimestamper(new DecimalFormat("000.000"), "[!r", "!w]!l "));
 ```
 
-### `GraphTelemetry`
+#### `GraphTelemetry`
 
 A 2D graph of data points.
 
@@ -138,3 +140,35 @@ GraphTelemetry graph = new GraphTelemetry(p);
 graph.setPlotMode(GraphTelemetry.PLOT_MODE_CONNECT);
 graph.addPoint(10, 45, false); // x, y, wipe previous points
 ```      
+
+### Text Formatting
+
+Many telemetry modules support formatted text.
+
+Color changes can be triggered with the '!' metacharacter followed by either a single-character color code or a multi-character color code clasped in curly brackets.
+
+```java
+par.setTitle("!oNozzle temperature"); // Orange
+par.setLine(0, "!{lb}1800 K"); // Light blue
+```
+
+A complete list of color codes can be found in the `Display` class. New color codes can be defined with `Display.addColorCode`.
+
+Font weight changes are indicated with '#', followed by either 'p', 'b', or 'i', for plain, bold, and italic, respectively.
+
+```java
+p.xAxisLabel = "#bt#p (#is#p)";
+```
+
+### Timestampers
+
+Custom timestamp formats can be specified for `ConsoleTelemetry` modules, among other things. Native Onyx comes with two custom implementations of `Timestamper`: `FormatTimestamper`, which uses a simple `DecimalFormat`, and `MissionTimestamper`, which puts a decimal format into T+- countdown form. These implementations also allow for left and right bounding strings, and if used in formattable modules, synergize nicely with text formatting. For example:
+
+```java
+Timestamper ts = new FormatTimestamper(
+    new DecimalFormat("00.00"), // Decimal format
+    "[#b!g", // String preceding the time value
+    "#p!w]"); // String succeeding the time value
+```
+
+The above format creates timestamps bound in plain white brackets, where the time value in between them is bold and green.

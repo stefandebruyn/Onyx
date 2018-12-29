@@ -174,6 +174,16 @@ public class Display extends JPanel {
     }
 
     /**
+     * Adds a new color code, or overwrites a native one.
+     *
+     * @param code format code to follow '!'
+     * @param col  color
+     */
+    public void addColorCode(String code, Color col) {
+        COLOR_CODES.put(code, col);
+    }
+
+    /**
      * Renders a single frame of telemetry and draws it to a graphics surface.
      *
      * @param g drawing surface
@@ -218,7 +228,7 @@ public class Display extends JPanel {
                     index += 2;
                     continue;
 
-                // Multi-character code enclosed in brackets
+                    // Multi-character code enclosed in brackets
                 } else if (nextChar == '{') {
                     // Find index of closing bracket
                     int closeIndex = -1;
@@ -239,7 +249,7 @@ public class Display extends JPanel {
                     }
                 }
 
-            // Weight code was found
+                // Weight code was found
             } else if (c == BEGIN_WEIGHT_CODE) {
                 Integer weight = WEIGHT_CODES.get("" + str.charAt(index + 1));
 
