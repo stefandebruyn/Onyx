@@ -2,9 +2,9 @@
 
 Onyx is a small Java library for creating live telemetry dashboards. Whether tracking rocket avionics or server activity, Onyx's minimalist design allows for high information density at a fraction of the complexity of larger libraries.
 
-![](images/rocket.png)
+![](images/example-rocket.png)
 
-![](images/robot.png)
+![](images/example-robot.png)
 
 ## Features
 
@@ -28,9 +28,10 @@ Display disp = new Display(640, 480, 10, "default", Theme.DARK);
 
 ```java
 FontMetrics fm = disp.fontMetrics();
-// x position, y position, support formatting, font metrics,
-ParagraphTelemetry par =
-    new ParagraphTelemetry(10, 10, true, fm, "!rMessage from Onyx", "#ihello, world");
+// x position, y position, support formatting, font metrics
+ParagraphTelemetry par = new ParagraphTelemetry(10, 10, true, fm,
+        "!rMessage from Onyx", // Title text
+        "#ihello, world"); // A line indented under title
 
 disp.addTelemetry("message", par); // Identifying name, module
 ```
