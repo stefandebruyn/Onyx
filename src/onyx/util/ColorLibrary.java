@@ -3,7 +3,7 @@ package onyx.util;
 import java.awt.*;
 
 /**
- * Extra colors for use in {@link onyx.ui.Theme}s.
+ * Extra colors for use in {@link onyx.graphics.Theme}s.
  */
 public class ColorLibrary {
     public static final Color LIGHT_BLUE = new Color(0x89c6ff),

@@ -1,4 +1,4 @@
-package onyx.ui;
+package onyx.graphics;
 
 import onyx.telemetry.ImageTelemetry;
 import onyx.telemetry.Telemetry;

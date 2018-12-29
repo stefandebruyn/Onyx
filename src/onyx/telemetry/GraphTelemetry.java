@@ -1,6 +1,6 @@
 package onyx.telemetry;
 
-import onyx.ui.Theme;
+import onyx.graphics.Theme;
 import onyx.util.Utilities;
 
 import java.awt.*;
